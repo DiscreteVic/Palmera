@@ -1,23 +1,28 @@
 use std::env;
 use std::path::Path;
 use std::process;
-use std::fs::File;
+use std::fs;
+use std::io::BufReader;
 
-fn binary_kmp_algo<T: std::io::Read>(pattern: Vec<u8>, chunk: T) -> Vec<u32>
+
+fn binary_kmp_algo(pattern: &Vec<u8>, chunk: &Vec<u8>) -> Vec<u32>
 {
     let mut founds: Vec<u32> = vec![];
     let n_checks: usize = pattern.len();
     let mut pattern_checks: usize = n_checks;
-    for (idx, val) in chunk.bytes().enumerate()
+    
+
+    for (idx, val) in chunk.iter().enumerate()
     {
-        let chunk_byte: u8 = val.ok().expect("Binary reading error.");
+        let chunk_byte: u8 = *val;
+
         if chunk_byte == pattern[n_checks - pattern_checks] 
         {
             pattern_checks -= 1;
             if pattern_checks == 0
             {
                 founds.push((idx - (n_checks - 1)) as u32);
-                break
+                pattern_checks = n_checks;
             }
         }
         else
@@ -29,6 +34,16 @@ fn binary_kmp_algo<T: std::io::Read>(pattern: Vec<u8>, chunk: T) -> Vec<u32>
 }
 
 
+fn get_dt_header_field_size(offset: u32, chunk: &Vec<u8>) -> u32
+{
+    let mut size:u32 = 0;
+    for i in 0..4
+    {
+        let byte: u8 = chunk[(offset + 4 + i) as usize];
+        size = size | ((byte as u32) << (8*(3-i)));
+    }
+    size
+}
 
 fn main() {
     println!("--- Palmera CLI ---");
@@ -46,13 +61,13 @@ fn main() {
         process::exit(1);
     }
     
-    let f = File::open(in_file_path).unwrap();
+    let f: Vec<u8> = fs::read(in_file_path).unwrap();
 
     let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
     
-    let result = binary_kmp_algo(pattern, f);
-    for i in result
-    {
-        print!("{} ",i);
-    }
+    let result = binary_kmp_algo(&pattern, &f);
+    
+    let offset = result[0];
+    println!("Size {}", get_dt_header_field_size(offset, &f))
+
 }
