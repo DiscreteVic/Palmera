@@ -4,6 +4,19 @@ use std::process;
 use std::fs;
 use std::io::BufReader;
 
+fn print_initial_prompt()
+{
+ println!(" _____      _                          ");
+ println!("|  __ \\    | |                         ");
+ println!("| |__) |_ _| |_ __ ___   ___ _ __ __ _ ");
+ println!("|  ___/ _` | | '_ ` _ \\ / _ \\ '__/ _` |");
+ println!("| |  | (_| | | | | | | |  __/ | | (_| |");
+ println!("|_|   \\__,_|_|_| |_| |_|\\___|_|  \\__,_|");
+ }
+                                        
+                                        
+
+
 
 fn binary_kmp_algo(pattern: &Vec<u8>, chunk: &Vec<u8>) -> Vec<u32>
 {
@@ -46,18 +59,19 @@ fn get_dt_header_field_size(offset: u32, chunk: &Vec<u8>) -> u32
 }
 
 fn main() {
-    println!("--- Palmera CLI ---");
+    //println!("--- Palmera CLI ---");
+    print_initial_prompt();
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1
     {
-        println!("Missing arguments!");
+        println!("ERR: Missing arguments!");
         process::exit(1);
     }
     let in_file_path = Path::new(&args[1]);
 
     if !in_file_path.exists()
     {
-        println!("File not found!");
+        println!("ERR: File not found!");
         process::exit(1);
     }
     
@@ -66,8 +80,19 @@ fn main() {
     let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
     
     let result = binary_kmp_algo(&pattern, &f);
-    
+    if result.len() == 0
+    {
+        println!("ERR: Device tree not found!");
+        process::exit(1);
+    }
+
     let offset = result[0];
-    println!("Size {}", get_dt_header_field_size(offset, &f))
+    
+    let dt_size = get_dt_header_field_size(offset, &f);
+
+    println!("-- Device tree found!!");
+    println!("-- Offset: {:#x}", offset);
+    println!("-- Size: {} bytes" , dt_size);
+
 
 }
