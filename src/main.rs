@@ -2,7 +2,8 @@ use std::env;
 use std::path::Path;
 use std::process;
 use std::fs;
-use std::io::BufReader;
+use std::fs::File;
+use std::io::Write;
 
 fn print_initial_prompt()
 {
@@ -58,6 +59,13 @@ fn get_dt_header_field_size(offset: u32, chunk: &Vec<u8>) -> u32
     size
 }
 
+fn get_dt(chunk: &Vec<u8>, offset: u32, size: u32) -> &[u8]
+{
+   &chunk[offset as usize..(offset+size) as usize]
+}
+
+
+
 fn main() {
     //println!("--- Palmera CLI ---");
     print_initial_prompt();
@@ -94,5 +102,8 @@ fn main() {
     println!("-- Offset: {:#x}", offset);
     println!("-- Size: {} bytes" , dt_size);
 
+
+    let mut fo = File::create("output.dtb").unwrap();
+    fo.write_all(get_dt(&f, offset, dt_size));
 
 }
