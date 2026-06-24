@@ -69,13 +69,28 @@ fn get_dt(chunk: &Vec<u8>, offset: u32, size: u32) -> &[u8]
 fn main() {
     //println!("--- Palmera CLI ---");
     print_initial_prompt();
-    let args: Vec<String> = env::args().collect();
-    if args.len() <= 1
+
+    let mut args = env::args_os();
+    if env::args_os().len() <= 1
     {
         println!("ERR: Missing arguments!");
         process::exit(1);
     }
-    let in_file_path = Path::new(&args[1]);
+    
+
+    let mut in_file: String = "".to_string();
+    let mut out_file: String = "".to_string();
+
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        match arg.to_str().unwrap() {
+            "-i" => in_file = args.next().unwrap().into_string().unwrap(),
+            "-o" => out_file = args.next().unwrap().into_string().unwrap(),
+            _ => {}
+        }
+    }
+    
+    let in_file_path = Path::new(&in_file);
 
     if !in_file_path.exists()
     {
@@ -103,7 +118,7 @@ fn main() {
     println!("-- Size: {} bytes" , dt_size);
 
 
-    let mut fo = File::create("output.dtb").unwrap();
-    fo.write_all(get_dt(&f, offset, dt_size));
-
+    let mut fo = File::create(&out_file).unwrap();
+    fo.write_all(get_dt(&f, offset, dt_size));  
+    println!("-- File generated: {}" , &out_file);
 }
