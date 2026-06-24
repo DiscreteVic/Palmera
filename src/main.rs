@@ -5,16 +5,8 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-fn print_initial_prompt()
-{
- println!(" _____      _                          ");
- println!("|  __ \\    | |                         ");
- println!("| |__) |_ _| |_ __ ___   ___ _ __ __ _ ");
- println!("|  ___/ _` | | '_ ` _ \\ / _ \\ '__/ _` |");
- println!("| |  | (_| | | | | | | |  __/ | | (_| |");
- println!("|_|   \\__,_|_|_| |_| |_|\\___|_|  \\__,_|");
- }
-                                        
+mod cli;
+
                                         
 
 
@@ -67,37 +59,14 @@ fn get_dt(chunk: &Vec<u8>, offset: u32, size: u32) -> &[u8]
 
 
 fn main() {
-    //println!("--- Palmera CLI ---");
-    print_initial_prompt();
+    cli::print_initial_prompt();
 
-    let mut args = env::args_os();
-    if env::args_os().len() <= 1
-    {
-        println!("ERR: Missing arguments!");
-        process::exit(1);
-    }
-    
+    let mut user_args = cli::UserArgs::new();
 
-    let mut in_file: String = "".to_string();
-    let mut out_file: String = "".to_string();
+    user_args.parse(env::args_os());
+    user_args.checks();
 
-    let mut args = args.into_iter();
-    while let Some(arg) = args.next() {
-        match arg.to_str().unwrap() {
-            "-i" => in_file = args.next().unwrap().into_string().unwrap(),
-            "-o" => out_file = args.next().unwrap().into_string().unwrap(),
-            _ => {}
-        }
-    }
-    
-    let in_file_path = Path::new(&in_file);
-
-    if !in_file_path.exists()
-    {
-        println!("ERR: File not found!");
-        process::exit(1);
-    }
-    
+    let in_file_path = Path::new(&user_args.ifile);
     let f: Vec<u8> = fs::read(in_file_path).unwrap();
 
     let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
@@ -118,7 +87,7 @@ fn main() {
     println!("-- Size: {} bytes" , dt_size);
 
 
-    let mut fo = File::create(&out_file).unwrap();
-    fo.write_all(get_dt(&f, offset, dt_size));  
-    println!("-- File generated: {}" , &out_file);
+    let mut fo = File::create(&user_args.ofile).unwrap();
+    let _ = fo.write_all(get_dt(&f, offset, dt_size));  
+    println!("-- File generated: {}" , &user_args.ofile);
 }
