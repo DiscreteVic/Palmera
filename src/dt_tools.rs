@@ -1,4 +1,3 @@
-use std::env;
 use std::path::Path;
 use std::process;
 use std::fs;
@@ -60,8 +59,7 @@ pub struct DeviceTree
 impl DeviceTree
 {
     pub fn find(file: &Path) -> DeviceTree {
-        let in_file_path = Path::new(file);
-        let f: Vec<u8> = fs::read(in_file_path).unwrap();
+        let f: Vec<u8> = fs::read(file).unwrap();
         let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
     
         let result = binary_kmp_algo(&pattern, &f);
@@ -75,15 +73,12 @@ impl DeviceTree
     
         let dt_size = get_dt_header_field_size(offset, &f);
 
-        println!("-- Device tree found!!");
-        println!("-- Offset: {:#x}", offset);
-        println!("-- Size: {} bytes" , dt_size);
-
-
-        let mut fo = File::create("test.dtb").unwrap();
-        let _ = fo.write_all(get_dt(&f, offset, dt_size));  
-        //println!("-- File generated: {}" , &user_args.ofile);
-
         DeviceTree {offset: offset, size: dt_size}
+    }
+
+    pub fn extract(&self, ifile: &Path, ofile: String) {
+        let f: Vec<u8> = fs::read(ifile).unwrap();
+        let mut fo = File::create(&ofile).unwrap();
+        let _ = fo.write_all(get_dt(&f, self.offset, self.size));  
     }
 }
