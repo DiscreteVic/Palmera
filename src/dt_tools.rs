@@ -5,12 +5,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-mod cli;
-mod dt_tools;
-                                        
 
-
-/*
 fn binary_kmp_algo(pattern: &Vec<u8>, chunk: &Vec<u8>) -> Vec<u32>
 {
     let mut founds: Vec<u32> = vec![];
@@ -55,44 +50,40 @@ fn get_dt(chunk: &Vec<u8>, offset: u32, size: u32) -> &[u8]
 {
    &chunk[offset as usize..(offset+size) as usize]
 }
-*/
 
+pub struct DeviceTree  
+{
+    pub offset: u32,
+    pub size: u32,
+}
 
-fn main() {
-    cli::print_initial_prompt();
-
-    let mut user_args = cli::UserArgs::new();
-
-    user_args.parse(env::args_os());
-    user_args.checks();
-
-    let in_file_path = Path::new(&user_args.ifile);
-    let dt = dt_tools::DeviceTree::find(&in_file_path);
-
-
-    /*let in_file_path = Path::new(&user_args.ifile);
-    let f: Vec<u8> = fs::read(in_file_path).unwrap();
-
-    let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
+impl DeviceTree
+{
+    pub fn find(file: &Path) -> DeviceTree {
+        let in_file_path = Path::new(file);
+        let f: Vec<u8> = fs::read(in_file_path).unwrap();
+        let pattern: Vec<u8> = vec![0xd0, 0x0d, 0xfe, 0xed];
     
-    let result = binary_kmp_algo(&pattern, &f);
-    if result.len() == 0
-    {
-        println!("ERR: Device tree not found!");
-        process::exit(1);
+        let result = binary_kmp_algo(&pattern, &f);
+        if result.len() == 0
+        {
+            println!("ERR: Device tree not found!");
+            process::exit(1);
+        }
+
+        let offset = result[0];
+    
+        let dt_size = get_dt_header_field_size(offset, &f);
+
+        println!("-- Device tree found!!");
+        println!("-- Offset: {:#x}", offset);
+        println!("-- Size: {} bytes" , dt_size);
+
+
+        let mut fo = File::create("test.dtb").unwrap();
+        let _ = fo.write_all(get_dt(&f, offset, dt_size));  
+        //println!("-- File generated: {}" , &user_args.ofile);
+
+        DeviceTree {offset: offset, size: dt_size}
     }
-
-    let offset = result[0];
-    
-    let dt_size = get_dt_header_field_size(offset, &f);
-
-    println!("-- Device tree found!!");
-    println!("-- Offset: {:#x}", offset);
-    println!("-- Size: {} bytes" , dt_size);
-
-
-    let mut fo = File::create(&user_args.ofile).unwrap();
-    let _ = fo.write_all(get_dt(&f, offset, dt_size));  
-    println!("-- File generated: {}" , &user_args.ofile);
-    */
 }
