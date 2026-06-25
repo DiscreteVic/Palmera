@@ -3,9 +3,9 @@ use std::path::Path;
 
 mod cli;
 mod dt_tools;
-                                        
+mod version;
+
 fn main() {
-    cli::print_initial_prompt();
 
     let mut user_args = cli::UserArgs::new();
 
